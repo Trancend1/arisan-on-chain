@@ -1,0 +1,13 @@
+# Foundry
+cache/
+out/
+broadcast/*/31337/run-*.json
+!broadcast/*/31337/run-latest.json
+
+# Node (app/)
+node_modules/
+.next/
+
+# Misc
+.env
+.DS_Store
