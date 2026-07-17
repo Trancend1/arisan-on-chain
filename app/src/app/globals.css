@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Token warna dari design-system.md §2 — satu-satunya sumber warna UI. */
+:root {
+  --ink: #17161c;
+  --ink-soft: #4a4954;
+  --muted: #8a8896;
+
+  --nila: #2c3a78;
+  --nila-tint: #e7eaf4;
+
+  --kunyit: #e39a0c;
+  --kunyit-deep: #b8790a;
+
+  --jade: #1f8f63;
+  --rust: #c0492e;
+  --amber: #d98a1f;
+
+  --paper: #fbfaf6;
+  --surface: #ffffff;
+  --line: #e3e1d9;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-nila: var(--nila);
+  --color-nila-tint: var(--nila-tint);
+  --color-kunyit: var(--kunyit);
+  --color-kunyit-deep: var(--kunyit-deep);
+  --color-jade: var(--jade);
+  --color-rust: var(--rust);
+  --color-amber: var(--amber);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+
+  /* Tipografi §3: display / body / data-mono */
+  --font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-body: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* Elevasi §4 */
+  --shadow-card: 0 1px 2px rgba(23, 22, 28, 0.06);
+  --shadow-lift: 0 6px 20px rgba(44, 58, 120, 0.08);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+}
+
+/* Focus keyboard terlihat jelas (§7): ring nila, offset 2px. */
+:focus-visible {
+  outline: 2px solid var(--nila);
+  outline-offset: 2px;
+}

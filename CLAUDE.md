@@ -66,16 +66,22 @@ Phase 0: Dokumen & Strategy Lock          [SELESAI]
 
 ### 2.3 Active Phase
 
-**Active phase:** Phase 2 — Web UI (`app/`)
+**Active phase:** Phase 3 — Integrasi, Bukti & Demo
 
-**Sprint focus:** Next.js + viem + TanStack Query; hooks & komponen sesuai `design-system.md`; ABI diambil dari `out/ArisanChain.sol/ArisanChain.json`.
+**Sprint focus:** `bukti_deploy.txt` (alamat akun, tx hash, alamat kontrak, gas, perubahan state), README reproduce 3 perintah (`anvil` → `forge script` → `npm run dev`), clean-room reproduce, cross-review.
 
 **Exit criteria Phase 1 (terpenuhi 2026-07-16):**
 - [x] `forge test` hijau (20/20) termasuk `test_ReentrancyBlocked` & access control
 - [x] `forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast` sukses — kontrak di `0x5FbDB2315678afecb367f032d93F642f64180aa3`, 7 tx (deploy + addMember×5 + start) di `broadcast/Deploy.s.sol/31337/run-latest.json`
 - [x] ABI frozen per `arisanchain.md` §3–§4 — perubahan signature butuh persetujuan kedua owner
 
-**Next:** Phase 3 (Integrasi & bukti) setelah UI satu siklus penuh jalan.
+**Exit criteria Phase 2 (terpenuhi 2026-07-17):**
+- [x] `npm run build` bersih (compile + typecheck + lint, Next.js 15.5 Turbopack)
+- [x] Satu siklus penuh jalan end-to-end lewat UI di Anvil: 5 ronde × 5 setoran + 5 `closeRound` → state Finished, total tersalurkan 25 ETH (diverifikasi via Playwright)
+- [x] F-7: tiap write menampilkan tx hash + gasUsed via TxToast (contribute ~59k gas, closeRound ~88k)
+- [x] ABI di-sync otomatis dari `out/` via `npm run sync-abi` (hook predev/prebuild)
+
+**Next:** Phase 4 (Laporan & submit) setelah bukti terdokumentasi.
 
 ### 2.4 Phase Log
 
@@ -83,7 +89,8 @@ Phase 0: Dokumen & Strategy Lock          [SELESAI]
 | --- | --- | --- | --- |
 | Phase 0 | Complete | Spesifikasi rinci di depan mempermudah paralelisasi A/B | ABI di `arisanchain.md` §3–§4 adalah kontrak antar-owner |
 | Phase 1 | Complete | Foundry hanya di WSL (bukan Windows PATH) — semua perintah forge/anvil lewat `wsl` | Anvil harus jalan sebelum deploy; forge-std di-vendor di `lib/` (tanpa submodule) supaya reproduce tanpa `forge install` |
-| Phase 2 | Active | — | — |
+| Phase 2 | Complete | Alamat kontrak deterministik hanya dari Anvil segar (nonce 0) — deploy ulang tanpa restart Anvil menghasilkan alamat berbeda | UI ambil alamat dari `NEXT_PUBLIC_ARISAN_ADDRESS` bila alamat berubah; demo = restart `anvil` lalu `forge script` |
+| Phase 3 | Active | — | — |
 
 ---
 
