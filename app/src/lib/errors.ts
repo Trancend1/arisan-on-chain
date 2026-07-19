@@ -23,8 +23,12 @@ export function revertMessage(err: unknown): string {
   for (const [code, message] of Object.entries(REVERT_MESSAGES)) {
     if (text.includes(code)) return message;
   }
-  if (text.includes("fetch") || text.includes("HTTP request failed")) {
+  if (
+    text.includes("fetch") ||
+    text.includes("HTTP request failed") ||
+    text.includes("took too long")
+  ) {
     return "Tidak bisa terhubung ke Anvil di 127.0.0.1:8545. Pastikan `anvil` berjalan.";
   }
-  return "Transaksi gagal. Coba lagi atau periksa log Anvil.";
+  return "Terjadi kesalahan. Coba lagi atau periksa log Anvil.";
 }

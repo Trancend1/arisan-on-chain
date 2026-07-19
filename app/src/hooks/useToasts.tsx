@@ -22,7 +22,10 @@ type ToastContextValue = {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-const SUCCESS_AUTO_DISMISS_MS = 10_000;
+// 30 dtk supaya tx hash sempat disalin sebagai bukti (F-7); stack dibatasi
+// agar setoran beruntun tidak menumpuk memenuhi layar.
+const SUCCESS_AUTO_DISMISS_MS = 30_000;
+const MAX_TOASTS = 5;
 
 /** Antrian TxToast (F-7): tiap write menampilkan hash, status, dan gasUsed. */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -35,7 +38,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const push = useCallback((toast: Omit<TxToastData, "id">) => {
     const id = nextId.current++;
-    setToasts((prev) => [...prev, { ...toast, id }]);
+    setToasts((prev) => [...prev, { ...toast, id }].slice(-MAX_TOASTS));
     return id;
   }, []);
 

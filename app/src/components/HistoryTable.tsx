@@ -36,6 +36,8 @@ type HistoryTableProps = {
   currentRound: number;
   finished: boolean;
   history: RoundHistoryEntry[];
+  /** Query log RoundClosed gagal — nominal & tx hash mungkin kosong. */
+  historyFailed?: boolean;
 };
 
 /**
@@ -47,6 +49,7 @@ export function HistoryTable({
   currentRound,
   finished,
   history,
+  historyFailed = false,
 }: HistoryTableProps) {
   const byRound = new Map(history.map((h) => [Number(h.round), h]));
   const rows: Row[] = members.map((recipient, round) => {
@@ -69,6 +72,13 @@ export function HistoryTable({
   return (
     <div className="rounded-[16px] border border-nila-tint bg-surface p-6 shadow-[var(--shadow-card)]">
       <h2 className="text-[1.25rem] font-semibold text-ink">Giliran penerima</h2>
+
+      {historyFailed && (
+        <p className="mt-2 text-[0.8rem] text-rust">
+          Riwayat transaksi gagal dimuat — nominal dan tx hash ronde yang sudah
+          ditutup mungkin belum tampil.
+        </p>
+      )}
 
       {/* Desktop: tabel */}
       <table className="mt-4 hidden w-full text-left md:table">

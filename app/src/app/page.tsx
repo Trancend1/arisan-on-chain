@@ -15,14 +15,16 @@ import {
 } from "@/hooks/useArisan";
 import { RPC_URL } from "@/lib/clients";
 import { ARISAN_ADDRESS, ArisanState } from "@/lib/contract";
+import { revertMessage } from "@/lib/errors";
 import { toEth } from "@/lib/format";
 
-function ConnectionError() {
+function ConnectionError({ detail }: { detail: string | null }) {
   return (
     <div className="rounded-[16px] border border-rust/40 bg-surface p-6 shadow-[var(--shadow-card)]">
       <h2 className="text-[1.25rem] font-semibold text-rust">
-        Tidak bisa terhubung ke chain lokal
+        Tidak bisa memuat data on-chain
       </h2>
+      {detail && <p className="mt-2 text-sm text-ink-soft">{detail}</p>}
       <p className="mt-2 text-sm text-ink-soft">
         Pastikan Anvil berjalan dan kontrak sudah dideploy, lalu muat ulang
         halaman ini:
@@ -32,6 +34,19 @@ function ConnectionError() {
 forge script script/Deploy.s.sol --rpc-url ${RPC_URL} --broadcast
 cd app && npm run dev`}
       </pre>
+    </div>
+  );
+}
+
+/** Node putus di sesi berjalan: data terakhir tetap tampil + peringatan. */
+function OfflineBanner({ detail }: { detail: string | null }) {
+  return (
+    <div
+      role="alert"
+      className="rounded-[10px] border border-rust/40 bg-surface px-4 py-3 text-sm text-rust shadow-[var(--shadow-card)]"
+    >
+      {detail ?? "Koneksi ke chain lokal terputus."} Menampilkan data terakhir
+      yang termuat.
     </div>
   );
 }
@@ -56,14 +71,20 @@ function SetupNotice() {
 export default function Dashboard() {
   const arisan = useArisan();
   const history = useRoundHistory();
-  useArisanEvents();
+  const offline = useArisanEvents();
 
   const snapshot = arisan.data;
   const finished = snapshot?.state === ArisanState.Finished;
-  const totalDisbursed = (history.data ?? []).reduce(
-    (sum, h) => sum + h.payout,
-    0n,
-  );
+  // Dihitung dari snapshot (pasti benar by invariant kontrak), bukan dari
+  // log riwayat yang bisa belum/gagal termuat.
+  const totalDisbursed =
+    snapshot && finished
+      ? snapshot.contributionAmount *
+        BigInt(snapshot.members.length) *
+        snapshot.totalRounds
+      : 0n;
+  const degraded = offline || arisan.isError;
+  const errorDetail = arisan.isError ? revertMessage(arisan.error) : null;
 
   return (
     <div className="min-h-screen">
@@ -80,7 +101,8 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto flex max-w-[960px] flex-col gap-6 px-6 py-8">
-        {arisan.isError && <ConnectionError />}
+        {degraded && !snapshot && <ConnectionError detail={errorDetail} />}
+        {degraded && snapshot && <OfflineBanner detail={errorDetail} />}
 
         {arisan.isLoading && (
           <p className="py-16 text-center text-sm text-muted">
@@ -143,6 +165,7 @@ export default function Dashboard() {
               currentRound={Number(snapshot.currentRound)}
               finished={finished}
               history={history.data ?? []}
+              historyFailed={history.isError}
             />
           </>
         )}
