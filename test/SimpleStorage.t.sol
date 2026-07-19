@@ -14,13 +14,13 @@ contract SimpleStorageTest is Test {
     }
 
     function test_InitialValueIsZero() public view {
-        assertEq(store.get(), 0);
+        assertEq(store.retrieve(), 0);
     }
 
-    function test_SetUpdatesValueAndEmits() public {
+    function test_StoreUpdatesValueAndEmits() public {
         vm.expectEmit(true, false, false, true);
         emit ValueChanged(address(this), 42);
-        store.set(42);
-        assertEq(store.get(), 42);
+        store.store(42);
+        assertEq(store.retrieve(), 42);
     }
 }
