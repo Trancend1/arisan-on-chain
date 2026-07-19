@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { publicClient } from "@/lib/clients";
 import { arisanContract, ArisanState, type ArisanStateValue } from "@/lib/contract";
 
@@ -26,16 +26,20 @@ export const ARISAN_QUERY_KEY = ["arisan"] as const;
 export const HISTORY_QUERY_KEY = ["arisan", "history"] as const;
 
 async function fetchSnapshot(): Promise<ArisanSnapshot> {
+  // Semua read dipaku ke satu blok supaya snapshot atomik — tanpa ini,
+  // closeRound yang masuk di sela read paralel bisa menghasilkan kombinasi
+  // state/currentRound tidak konsisten (recipientOf revert ROUND_OUT_OF_RANGE).
+  const blockNumber = await publicClient.getBlockNumber({ cacheTime: 0 });
   const [state, admin, contributionAmount, currentRound, totalRounds, pot, members, progress] =
     await Promise.all([
-      publicClient.readContract({ ...arisanContract, functionName: "state" }),
-      publicClient.readContract({ ...arisanContract, functionName: "admin" }),
-      publicClient.readContract({ ...arisanContract, functionName: "contributionAmount" }),
-      publicClient.readContract({ ...arisanContract, functionName: "currentRound" }),
-      publicClient.readContract({ ...arisanContract, functionName: "totalRounds" }),
-      publicClient.readContract({ ...arisanContract, functionName: "pot" }),
-      publicClient.readContract({ ...arisanContract, functionName: "getMembers" }),
-      publicClient.readContract({ ...arisanContract, functionName: "roundProgress" }),
+      publicClient.readContract({ ...arisanContract, functionName: "state", blockNumber }),
+      publicClient.readContract({ ...arisanContract, functionName: "admin", blockNumber }),
+      publicClient.readContract({ ...arisanContract, functionName: "contributionAmount", blockNumber }),
+      publicClient.readContract({ ...arisanContract, functionName: "currentRound", blockNumber }),
+      publicClient.readContract({ ...arisanContract, functionName: "totalRounds", blockNumber }),
+      publicClient.readContract({ ...arisanContract, functionName: "pot", blockNumber }),
+      publicClient.readContract({ ...arisanContract, functionName: "getMembers", blockNumber }),
+      publicClient.readContract({ ...arisanContract, functionName: "roundProgress", blockNumber }),
     ]);
 
   const [contributed, recipient] = await Promise.all([
@@ -45,6 +49,7 @@ async function fetchSnapshot(): Promise<ArisanSnapshot> {
           ...arisanContract,
           functionName: "hasContributed",
           args: [currentRound, m],
+          blockNumber,
         }),
       ),
     ),
@@ -53,6 +58,7 @@ async function fetchSnapshot(): Promise<ArisanSnapshot> {
           ...arisanContract,
           functionName: "recipientOf",
           args: [currentRound],
+          blockNumber,
         })
       : Promise.resolve(null),
   ]);
@@ -79,6 +85,8 @@ export function useArisan() {
     queryKey: ARISAN_QUERY_KEY,
     queryFn: fetchSnapshot,
     retry: 1,
+    // Fallback bila event watcher mati (node putus): deteksi & pulih otomatis.
+    refetchInterval: 15_000,
   });
 }
 
@@ -115,17 +123,43 @@ export function useRoundHistory() {
 /**
  * Pasang watcher semua event kontrak → invalidate query (auto-refetch, F-8).
  * Panggil SEKALI di level halaman; jangan di banyak komponen.
+ *
+ * @returns `true` bila koneksi ke node terputus (poll watcher gagal).
+ *   Deteksi offline sengaja DI LUAR React Query: memaksa refetch gagal lewat
+ *   invalidateQueries rawan dibatalkan oleh invalidasi lain yang beruntun
+ *   (CancelledError di-swallow query-core → status error tak pernah tercapai).
  */
-export function useArisanEvents() {
+export function useArisanEvents(): boolean {
   const queryClient = useQueryClient();
+  const [offline, setOffline] = useState(false);
+
   useEffect(() => {
     const unwatch = publicClient.watchContractEvent({
       ...arisanContract,
       pollingInterval: 1_000,
       onLogs: () => {
+        setOffline(false);
         queryClient.invalidateQueries({ queryKey: ARISAN_QUERY_KEY });
       },
+      onError: () => setOffline(true),
     });
     return unwatch;
   }, [queryClient]);
+
+  // Selama offline: ping ringan sampai node kembali, lalu segarkan semua data.
+  useEffect(() => {
+    if (!offline) return;
+    const timer = setInterval(async () => {
+      try {
+        await publicClient.getBlockNumber({ cacheTime: 0 });
+        setOffline(false);
+        queryClient.invalidateQueries({ queryKey: ARISAN_QUERY_KEY });
+      } catch {
+        // masih offline — biarkan interval mencoba lagi
+      }
+    }, 2_000);
+    return () => clearInterval(timer);
+  }, [offline, queryClient]);
+
+  return offline;
 }
