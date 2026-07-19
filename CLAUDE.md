@@ -70,6 +70,14 @@ Phase 0: Dokumen & Strategy Lock          [SELESAI]
 
 **Sprint focus:** `bukti_deploy.txt` (alamat akun, tx hash, alamat kontrak, gas, perubahan state), README reproduce 3 perintah (`anvil` → `forge script` → `npm run dev`), clean-room reproduce, cross-review.
 
+**Progress Phase 3 (2026-07-19):**
+- [x] `bukti_deploy.txt` — bukti lengkap dari run kanonik: 7 tx deploy, siklus penuh 5 ronde (25 contribute + 5 closeRound, hash+gas), SimpleStorage Langkah 5, state akhir Finished, ringkasan gas
+- [x] `README.md` — reproduce 3 perintah, alamat deterministik, struktur repo
+- [x] `testing.md` — panduan uji manual/responsi mengikuti Lembar TR Langkah 1–7: verifikasi lingkungan, anvil, forge test, deploy, interaksi cast (+5 uji negatif tervalidasi), checklist UI 10 langkah, analisis read-vs-write, skrip demo, troubleshooting, pemetaan rubrik, titik foto
+- [x] `SimpleStorage.sol` diselaraskan ke template TR (`store`/`retrieve`, sebelumnya `set`/`get`) agar perintah cast Langkah 5 dosen berfungsi apa adanya — disetujui Owner A 2026-07-19 (area `src/`+`test/`, 20/20 test tetap hijau)
+- [ ] Clean-room reproduce README oleh Owner B (tugas manusia)
+- [ ] Cross-review sebelum submit (tugas manusia)
+
 **Exit criteria Phase 1 (terpenuhi 2026-07-16):**
 - [x] `forge test` hijau (20/20) termasuk `test_ReentrancyBlocked` & access control
 - [x] `forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast` sukses — kontrak di `0x5FbDB2315678afecb367f032d93F642f64180aa3`, 7 tx (deploy + addMember×5 + start) di `broadcast/Deploy.s.sol/31337/run-latest.json`

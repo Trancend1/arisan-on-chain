@@ -1,0 +1,149 @@
+================================================================================
+BUKTI DEPLOY & INTERAKSI — ARISAN ON-CHAIN (TR TC789A Teknologi Blockchain)
+================================================================================
+Jaringan   : Anvil (Foundry) — http://127.0.0.1:8545, chainId 31337
+Tanggal    : 2026-07-19
+Catatan    : Seluruh alamat & tx hash di bawah DETERMINISTIK — dapat direproduksi
+             identik dengan menjalankan ulang urutan yang sama di Anvil segar
+             (lihat testing.md Bagian 8). Anvil memakai mnemonic default
+             "test test ... junk"; private key akun ini memang publik dan
+             HANYA untuk lab lokal.
+
+--------------------------------------------------------------------------------
+1. ALAMAT AKUN (akun deterministik Anvil #0–#5)
+--------------------------------------------------------------------------------
+Admin/deployer (akun #0) : 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Anggota 1      (akun #1) : 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+Anggota 2      (akun #2) : 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+Anggota 3      (akun #3) : 0x90F79bf6EB2c4f870365E785982E1f101E93b906
+Anggota 4      (akun #4) : 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65
+Anggota 5      (akun #5) : 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc
+Saldo awal masing-masing : 10000 ETH (pre-funded Anvil)
+
+--------------------------------------------------------------------------------
+2. DEPLOY KONTRAK APLIKASI — ArisanChain.sol
+   (forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast)
+   Satu broadcast = deploy + addMember x5 + start(), 7 transaksi dari akun #0.
+--------------------------------------------------------------------------------
+Alamat kontrak : 0x5FbDB2315678afecb367f032d93F642f64180aa3
+Constructor arg: contributionAmount = 1 ether (1000000000000000000 Wei)
+
+nonce 0 | blok 1 | deploy ArisanChain     | gas 810175
+          tx: 0x4afa1eee35c6085b5d03029601f5383c7135ae3ede2f76b4e93a9a5e0e5d6b27
+nonce 1 | blok 2 | addMember(Anggota 1)   | gas 93997
+          tx: 0x30ef0efdbaaff1a65aa7c0a265e268021b8540d2217036efdc68ca0e39821a55
+nonce 2 | blok 3 | addMember(Anggota 2)   | gas 76885
+          tx: 0xb042c118f09cbf71d9356c734e0f23d87bf1fafd297303bd56f6d872276786b0
+nonce 3 | blok 4 | addMember(Anggota 3)   | gas 76897
+          tx: 0x006b6655d80cd66b5ddc111682d0cff8260ae1a78893164f91c992c150cdebbe
+nonce 4 | blok 4 | addMember(Anggota 4)   | gas 76897
+          tx: 0x224b604675729675a25fdd4c74edda142ff0ced754bc8fd85421ebf74bef5611
+nonce 5 | blok 4 | addMember(Anggota 5)   | gas 76897
+          tx: 0x7e19cd29601751b4b3c3ade771e5c9c6c83d31c48519fb6ec85c76ad1bd4a22a
+nonce 6 | blok 4 | start()                | gas 73456
+          tx: 0x351d26944645d6e2d13cac6a6c092c904f9e810fdabf2f67dcd49b025b570fa2
+
+State setelah deploy (read via cast call, 0 gas):
+  state()              = 1 (Active)
+  contributionAmount() = 1000000000000000000 Wei (1 ETH)
+  totalRounds()        = 5
+  currentRound()       = 0
+  roundProgress()      = (0, 5)
+  recipientOf(0)       = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (Anggota 1)
+
+--------------------------------------------------------------------------------
+3. DEPLOY KONTRAK LATIHAN FONDASI — SimpleStorage.sol (Langkah 5 TR)
+   (forge create src/SimpleStorage.sol:SimpleStorage --broadcast)
+--------------------------------------------------------------------------------
+Alamat kontrak : 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853
+Tx hash deploy : 0xbc2ee6fd776050938cacbfa3ff00bcc87804ee340ca510de30469a8f23d1208b
+
+Bukti perubahan state (read -> write -> read):
+  cast call retrieve()  SEBELUM : 0
+  cast send store(42)   tx      : 0xf2c77620fa34cbbf82e6a37b2901754920b39fe8f354131d58a45dd69e35b4de
+                        gasUsed : 44970 | status: 1 (success)
+  cast call retrieve()  SESUDAH : 42   <-- state berubah
+  event ValueChanged            : 1 entri (cast logs)
+
+--------------------------------------------------------------------------------
+4. TRANSAKSI WRITE APLIKASI — RONDE 1 (detail per transaksi)
+   contribute() dikirim oleh 5 akun anggota berbeda; closeRound() sengaja
+   dikirim oleh ADMIN yang BUKAN anggota — bukti closeRound aman publik.
+--------------------------------------------------------------------------------
+Saldo Anggota 1 sebelum ronde: 10000.000000000000000000 ETH
+
+contribute() Anggota 1 | gas 76519
+  tx: 0x3f375790bc2aba10273df78fe4f195e4ba98481c6b83adef75c593e9227f1477
+contribute() Anggota 2 | gas 59419
+  tx: 0x6fe5bcc74a796e154c326a9ea0032972b2236f25be1be9c03e140160c15caf08
+contribute() Anggota 3 | gas 59419
+  tx: 0x65a6d4b8184a4001b1be5914741e7eda68ab3b2b9f8c6d0e04475c9f21cdcc30
+contribute() Anggota 4 | gas 59419
+  tx: 0xc04a474c65c068d144f9439f87aef11eac6da45a54edae41f7d78ee66704cc90
+contribute() Anggota 5 | gas 59419
+  tx: 0xfeb3780f35a0c8e540c4b1648a8b354962f75221e895d059be4da678bab70fed
+
+Read sebelum tutup ronde: roundProgress() = (5, 5) | pot() = 5 ETH (5e18 Wei)
+
+closeRound() ronde 1 (pengirim: admin, non-anggota) | gas 88373
+  tx: 0xc651af2d547b925847580d5ec3044575328de05293db97cfa5aaf2dd257e2a46
+
+Bukti perubahan state ronde 1:
+  Saldo Anggota 1 sesudah : 10003.999965188200131415 ETH  (+5 ETH pot, -1 ETH
+                            setoran, -gas; penerima ronde 0 = members[0])
+  hasReceived(Anggota 1)  = true   (sebelumnya false)
+  currentRound()          = 1      (sebelumnya 0)
+  pot()                   = 0      (reset setelah payout)
+
+--------------------------------------------------------------------------------
+5. RONDE 2–5 (ringkasan; tiap ronde = 5x contribute + 1x closeRound)
+--------------------------------------------------------------------------------
+closeRound() ronde 2 | gas 71273
+  tx: 0x128e17b0efaa6c2d6a571f90792deb4f5fd9e8fdd1aa41bfe1fba4af20b42082
+closeRound() ronde 3 | gas 71273
+  tx: 0xe29bf93b8c0be076cd86c7e5d6e0260d2c1581bfad3301fa445f2331fe5c3cd7
+closeRound() ronde 4 | gas 71273
+  tx: 0xe59050f4fe8f16ab6b0634e37af54d44e5300ebec5048220707a50d91f233a92
+closeRound() ronde 5 | gas 75064   (lebih besar: transisi state -> Finished
+  tx: 0x8807c6569a43ee45bae4b6a44d70d875432dddb7373b17cb7bb8ece3fabbe44a
+                                    + emit ArisanFinished)
+
+--------------------------------------------------------------------------------
+6. STATE AKHIR — SIKLUS SELESAI (Finished)
+--------------------------------------------------------------------------------
+state()        = 2 (Finished)
+pot()          = 0
+Saldo kontrak  = 0 Wei          <-- invariant: tidak ada dana tersangkut
+currentRound() = 5 = totalRounds
+Blok terakhir  = 36
+
+hasReceived(Anggota 1) = true | saldo akhir: 9999.999937824762936628 ETH
+hasReceived(Anggota 2) = true | saldo akhir: 9999.999957723606163239 ETH
+hasReceived(Anggota 3) = true | saldo akhir: 9999.999962987221700338 ETH
+hasReceived(Anggota 4) = true | saldo akhir: 9999.999967595491598324 ETH
+hasReceived(Anggota 5) = true | saldo akhir: 9999.999971630009552645 ETH
+(Zero-sum: tiap anggota setor 5x1 ETH dan menerima pot 5 ETH tepat satu kali;
+ selisih dari 10000 ETH murni biaya gas.)
+
+Bukti event (cast logs --from-block 0):
+  Contributed  : 25 entri (5 anggota x 5 ronde)
+  RoundClosed  : 5 entri  (1 per ronde)
+  Total ETH tersalurkan lewat pot: 5 ronde x 5 ETH = 25 ETH
+
+--------------------------------------------------------------------------------
+7. RINGKASAN GAS (bahan analisis Pertanyaan G2 & G4)
+--------------------------------------------------------------------------------
+Operasi                          | Jenis  | Gas
+---------------------------------+--------+---------------------------------
+deploy ArisanChain               | write  | 810175
+addMember() pertama              | write  | 93997  (cold storage slot)
+addMember() berikutnya           | write  | 76885-76897
+start()                          | write  | 73456
+contribute() pertama dalam ronde | write  | 76519  (cold slot pot/mapping)
+contribute() berikutnya          | write  | 59419
+closeRound() ronde biasa         | write  | 71273-88373
+closeRound() ronde terakhir      | write  | 75064  (+transisi Finished)
+SimpleStorage store(42)          | write  | 44970
+state()/pot()/roundProgress()/   | read   | 0 (eth_call — dieksekusi lokal
+getMembers()/hasReceived() dll.  |        |    node, tidak masuk blok)
+================================================================================
