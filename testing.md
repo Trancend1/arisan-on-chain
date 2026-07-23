@@ -36,7 +36,6 @@ Alamat `ARISAN` dan `SIMPLE` **deterministik** selama urutan Bagian 4 diikuti pa
 | 4 | `$ forge --version && cast --version && anvil --version` | Versi Foundry (1.x) untuk ketiganya |
 | 5 | `$ git --version && node --version` | Versi git & Node ≥ 20 |
 
-📷 **Bukti 1:** satu foto terminal memuat output #3 dan #4.
 
 > Kalau `forge: command not found`: jalankan `source ~/.bashrc`, atau tambah PATH manual: `export PATH=$PATH:~/.foundry/bin`. Belum terinstal? `curl -L https://foundry.paradigm.xyz | bash && source ~/.bashrc && foundryup`.
 
@@ -65,8 +64,6 @@ cast chain-id --rpc-url http://127.0.0.1:8545
 # → 31337
 ```
 
-📷 **Bukti 2:** foto output `anvil` (daftar akun) + hasil ketiga perintah cast.
-
 ---
 
 ## Bagian 3 — Kompilasi & Unit Test (TR Langkah 4)
@@ -87,8 +84,6 @@ forge test
 forge test --gas-report
 # → tabel gas per fungsi (bahan analisis Pertanyaan G2)
 ```
-
-📷 **Bukti 3:** foto hasil `forge test` (ringkasan 20 passed) + potongan gas report.
 
 ---
 
@@ -135,8 +130,6 @@ cast call 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853 "retrieve()(uint256)" --rpc
 cast block-number --rpc-url http://127.0.0.1:8545
 # → nomor blok bertambah (transaksi terinklusi)
 ```
-
-📷 **Bukti 4:** foto (a) output forge script dengan alamat kontrak, (b) rangkaian retrieve 0 → store 42 → retrieve 42.
 
 **Catat untuk laporan:** alamat kedua kontrak, tx hash deploy, tx hash store, gasUsed, nilai retrieve sebelum/sesudah.
 
@@ -192,7 +185,6 @@ cast call $ARISAN "currentRound()(uint256)" --rpc-url $RPC            # → 1
 cast call $ARISAN "pot()(uint256)" --rpc-url $RPC                     # → 0
 ```
 
-📷 **Bukti 5:** foto rangkaian contribute (min. 2 tx dengan hash+gas terlihat) + closeRound + read hasReceived/currentRound sesudahnya.
 
 ### 5c. Uji negatif — semua revert HARUS terjadi (bukti access control & validasi)
 
@@ -207,7 +199,6 @@ cast call $ARISAN "pot()(uint256)" --rpc-url $RPC                     # → 0
 
 Output error cast akan memuat string revert, contoh: `execution reverted: WRONG_AMOUNT`.
 
-📷 **Bukti 6:** foto minimal 3 uji negatif dengan pesan revert terlihat.
 
 ### 5d. Bukti event (bahan laporan)
 

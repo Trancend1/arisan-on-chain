@@ -22,9 +22,10 @@ type ToastContextValue = {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-// 30 dtk supaya tx hash sempat disalin sebagai bukti (F-7); stack dibatasi
-// agar setoran beruntun tidak menumpuk memenuhi layar.
-const SUCCESS_AUTO_DISMISS_MS = 30_000;
+// Toast hasil (success/error) hilang otomatis 3 dtk supaya tidak menumpuk
+// memenuhi layar saat setoran beruntun. Bukti hash+gasUsed tetap tercatat di
+// bukti_deploy.txt (F-7), bukan mengandalkan durasi toast di layar.
+const AUTO_DISMISS_MS = 3_000;
 const MAX_TOASTS = 5;
 
 /** Antrian TxToast (F-7): tiap write menampilkan hash, status, dan gasUsed. */
@@ -47,8 +48,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       setToasts((prev) =>
         prev.map((t) => (t.id === id ? { ...t, ...patch } : t)),
       );
-      if (patch.status === "success") {
-        setTimeout(() => dismiss(id), SUCCESS_AUTO_DISMISS_MS);
+      // Status akhir (success/error) auto-dismiss; pending tetap menunggu hasil.
+      if (patch.status === "success" || patch.status === "error") {
+        setTimeout(() => dismiss(id), AUTO_DISMISS_MS);
       }
     },
     [dismiss],

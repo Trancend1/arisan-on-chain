@@ -131,7 +131,7 @@ Bukti event (cast logs --from-block 0):
   Total ETH tersalurkan lewat pot: 5 ronde x 5 ETH = 25 ETH
 
 --------------------------------------------------------------------------------
-7. RINGKASAN GAS (bahan analisis Pertanyaan G2 & G4)
+7. RINGKASAN GAS 
 --------------------------------------------------------------------------------
 Operasi                          | Jenis  | Gas
 ---------------------------------+--------+---------------------------------
